@@ -26,7 +26,7 @@ It has a base code for a paper, and my experiment and application using base cod
 
 1) [MicroNet](https://github.com/yundaehyuck/project-public-code/tree/master/Deep%20learning%20trend%20search/2021_09/MicroNet "MicroNet")
 
-2) [Fastformer](https://github.com/yundaehyuck/project-public-code/tree/master/Deep%20learning%20trend%20search/2021_09/Fastformer "Fastformer")
+2) [Fastformer](https://github.com/yundaehyuck/AI_Note/tree/main/Deep%20learning%20trend%20search/2021_09/Fastformer "Fastformer")
 ***
 
 -2021/10
