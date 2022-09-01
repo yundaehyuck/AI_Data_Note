@@ -17,7 +17,7 @@ It has a base code for a paper, and my experiment and application using base cod
 
 1) [Deep neural network for Tabular](https://github.com/yundaehyuck/AI_Note/tree/main/Deep%20learning%20trend%20search/2021_08/Deep%20neural%20network%20for%20Tabular "Deep neural network for Tabular")
 
-2) [CoTNet](https://github.com/yundaehyuck/project-public-code/tree/master/Deep%20learning%20trend%20search/2021_08/CoTNet "CoTNet")
+2) [CoTNet](https://github.com/yundaehyuck/AI_Note/tree/main/Deep%20learning%20trend%20search/2021_08/CoTNet "CoTNet")
 
 3) [PonderNet](https://github.com/yundaehyuck/project-public-code/tree/master/Deep%20learning%20trend%20search/2021_08/PonderNet "PonderNet")
 ***
