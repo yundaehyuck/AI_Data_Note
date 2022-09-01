@@ -19,7 +19,7 @@ It has a base code for a paper, and my experiment and application using base cod
 
 2) [CoTNet](https://github.com/yundaehyuck/AI_Note/tree/main/Deep%20learning%20trend%20search/2021_08/CoTNet "CoTNet")
 
-3) [PonderNet](https://github.com/yundaehyuck/project-public-code/tree/master/Deep%20learning%20trend%20search/2021_08/PonderNet "PonderNet")
+3) [PonderNet](https://github.com/yundaehyuck/AI_Note/tree/main/Deep%20learning%20trend%20search/2021_08/PonderNet "PonderNet")
 ***
 
 -2021/09
