@@ -34,3 +34,13 @@ It has a base code for a paper, and my experiment and application using base cod
 1) [MobileStereoNet](https://github.com/yundaehyuck/AI_Note/tree/main/Deep%20learning%20trend%20search/2021_10/MobileStereoNet "MobileStereoNet")
 
 ***
+
+3.AI skill
+------
+
+Learn about data science basic skills
+
+1) [DALI](https://github.com/yundaehyuck/project-public-code/tree/master/Basic%20study%20code/DALI "DALI")
+
+- How to speed up your model using NVIDIA Data Loading Library
+***
