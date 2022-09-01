@@ -1,0 +1,3 @@
+Sampler/Driving/RGB_cleanpass/left/0402.png Sampler/Driving/RGB_cleanpass/right/0402.png Sampler/Driving/disparity/0402.pfm
+Sampler/Monkaa/RGB_cleanpass/left/0050.png Sampler/Monkaa/RGB_cleanpass/right/0050.png Sampler/Monkaa/disparity/0050.pfm
+Sampler/FlyingThings3D/RGB_cleanpass/left/0008.png Sampler/FlyingThings3D/RGB_cleanpass/right/0008.png Sampler/FlyingThings3D/disparity/0008.pfm
