@@ -3,7 +3,7 @@
 1.Implementation
 ------
 
-1) [Learning to resize images for Computer vision tasks](https://github.com/yundaehyuck/project-public-code/tree/master/Learning%20to%20Resize%20Images%20for%20Computer%20Vision%20Tasks "Learning to resize images for Computer vision tasks")
+1) [Learning to resize images for Computer vision tasks](https://github.com/yundaehyuck/AI_Note/tree/main/Learning%20to%20Resize%20Images%20for%20Computer%20Vision%20Tasks "Learning to resize images for Computer vision tasks")
 ***
 
 2.Deep learning trend search
