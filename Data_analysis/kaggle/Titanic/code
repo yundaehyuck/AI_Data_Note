@@ -1,0 +1,535 @@
+#read dataset
+train = pd.read_csv('../input/titanic/train.csv')
+test = pd.read_csv('../input/titanic/test.csv')
+
+
+#detect NULL data
+train.isnull().sum()
+test.isnull().sum()
+
+#exploratory data analysis
+#to protect original data, deepcopy dataset
+
+import copy
+
+train_all_del=copy.deepcopy(train.dropna(axis=0))
+
+#sex vs. survived
+import matplotlib.pyplot as plt
+
+count_sex = train_all_del.groupby('Sex').Survived.sum()
+
+plt.bar(count_sex.index,count_sex)
+plt.xlabel('Sex')
+plt.ylabel('Survived')
+plt.show()
+
+
+#fare vs. survived scatterplot
+
+import seaborn as sns
+
+sns.scatterplot(x='Fare', 
+
+                y='Survived', 
+
+                hue='Survived', # different colors by group
+
+                style='Survived', # different shapes by group
+
+                s=100, # marker size
+
+                data=train_all_del)
+
+plt.show()
+
+
+#decision tree to categorize
+from sklearn.tree import DecisionTreeClassifier
+
+x_train = train_all_del[['Age','Fare']]
+y_train = train_all_del['Survived']
+
+train_all_del_clf = DecisionTreeClassifier(random_state=156)
+train_all_del_clf.fit(x_train, y_train)
+
+#visualization decision tree
+from sklearn.tree import export_graphviz
+import graphviz
+
+dot_data = export_graphviz(train_all_del_clf,   
+                               out_file = None,  # change to file?
+                               feature_names = ['Age','Fare'],  # feature name
+                               class_names = ['Dead','Survived'],  # target name
+                               filled = True,           # filling color?
+                               rounded = True,          # rounding data?
+                               special_characters = True)   # using special character?
+
+graph = graphviz.Source(dot_data)              
+graph
+
+
+#data analysis
+#predict NaN value
+#to predict nan value, concaternate train,test dataset
+
+#'Ind' is indicator that distincts train & test
+
+train['Ind'] = [0] * len(list(train['PassengerId'])) #train is 0
+
+test['Ind'] = [1] * len(list(test['PassengerId'])) #test is 1
+
+#to avoid dummy variable, code int variable
+
+concat_data = pd.concat([train,test])
+concat_data.isnull().sum()
+
+#I think 'Pclass' is categorical variable, so change type
+
+concat_data = concat_data.astype({'Pclass':'object'})
+
+concat_data['Pclass']
+
+
+#'sibsp','parch' is family relations, so sibsp+parch = family_number
+
+concat_data['Family_number']=concat_data['SibSp'] + concat_data['Parch']
+
+concat_data = concat_data[concat_data.columns.difference(['SibSp','Parch'])] #delete variable
+
+
+#name variable preprocessing
+#name title(Mr. , Mrs. etc) is influence on Age
+
+name_list = []
+
+for i in list(concat_data['Name']):
+    name_list.append(i.split(',')[1])
+    
+name_list_two = []
+
+for i in name_list:
+    name_list_two.append(i.split('.')[0])
+
+name_list_three = []
+
+for i in name_list_two:
+    name_list_three.append(i.strip())
+
+concat_data['Title'] = name_list_three
+
+concat_data
+
+#visualize Name(Title) & Survived
+
+import matplotlib.pyplot as plt
+
+count_title = concat_data.groupby('Title').Survived.sum()
+
+ax = plt.subplot(1, 1, 1)
+
+plt.bar(count_title.index,count_title)
+plt.xlabel('title')
+plt.xticks([i * 2 + 0.5 for i in range(len(count_title.index))], count_title.index)
+
+for label in ax.xaxis.get_ticklabels() :
+    label.set_rotation(45)
+    
+plt.ylabel('Survived')
+plt.show()
+
+#'Cabin' has many NaN values, so delete Cabin
+
+#because of 'Ticket' that is variant, delete 'Ticket'
+
+#'Embarked' in train has small NaN values, I think this is not influence on prediction. So delete NaN instances
+
+concat_data_del_var_ticket = concat_data[concat_data.columns.difference(['Name','Cabin','Ticket'])]
+
+concat_data_del_var_ticket = concat_data_del_var_ticket[concat_data_del_var_ticket['Embarked'].notnull()]
+
+#drop_first=True, to avoid dummy variable trap
+
+concat_data_del_var_ticket_dummies = pd.get_dummies(concat_data_del_var_ticket,drop_first=True)
+
+concat_data_del_var_ticket_dummies
+
+
+#not NaN Value in Age,Fare
+
+concat_data_del_var_ticket_dummies_del_age = concat_data_del_var_ticket_dummies[concat_data_del_var_ticket_dummies['Age'].notnull()]
+
+concat_data_del_var_ticket_dummies_del_agefare = concat_data_del_var_ticket_dummies_del_age[concat_data_del_var_ticket_dummies_del_age['Fare'].notnull()]
+
+concat_data_del_var_ticket_dummies_del_agefare.isnull().sum()
+
+
+#independent & dependent split for predicting NaN in 'Age'
+
+x = concat_data_del_var_ticket_dummies_del_agefare[concat_data_del_var_ticket_dummies_del_agefare.columns.difference(['Age','Ind','Survived','PassengerId'])]
+
+y = concat_data_del_var_ticket_dummies_del_agefare['Age']
+
+
+#knn modeling in grid search to select best parameters
+
+from sklearn.model_selection import GridSearchCV 
+from sklearn.neighbors import KNeighborsRegressor
+
+param_grid = [ {'n_neighbors': [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} ] 
+
+knn = KNeighborsRegressor(weights='distance') 
+
+#train across 5 folds 
+
+grid_search = GridSearchCV(knn, param_grid, cv=5, scoring='neg_mean_squared_error', return_train_score=True) 
+
+grid_search.fit(x, y)
+
+grid_search.best_params_
+
+
+#knn algorithm for predicting NaN in continuous 'Age'
+
+# weights = 'distance' is variable weighted regression
+knn_age = KNeighborsRegressor(n_neighbors = 17, weights = "distance").fit(x, y)
+
+
+#NaN dataset in 'Age'
+
+concat_data_del_var_ticket_dummies_age = concat_data_del_var_ticket_dummies[concat_data_del_var_ticket_dummies['Age'].isnull()]
+
+concat_data_del_var_ticket_dummies_age.isnull().sum()
+
+
+#to predict NaN Age, get NaN age dataset and predict Age
+
+x_new = concat_data_del_var_ticket_dummies_age[concat_data_del_var_ticket_dummies_age.columns.difference(['Age','Ind','Survived','PassengerId'])]
+
+knn_pred = knn_age.predict(x_new)
+
+knn_pred
+
+
+
+# fill age nan value by using knn prediction value
+
+concat_data_del_var_ticket_dummies_age['Age'] = knn_pred
+
+concat_data_del_var_ticket_dummies_age['Age']
+
+
+#concatenate prediction dataset, original dataset
+
+concat_data_del_var_ticket_dummies_predage = pd.concat([concat_data_del_var_ticket_dummies_age,concat_data_del_var_ticket_dummies_del_age])
+
+concat_data_del_var_ticket_dummies_predage.isnull().sum()
+
+
+#finally, predict 'Fare'
+
+concat_data_del_var_ticket_dummies_predage_del_fare = concat_data_del_var_ticket_dummies_predage[concat_data_del_var_ticket_dummies_predage['Fare'].notnull()]
+
+x = concat_data_del_var_ticket_dummies_predage_del_fare[concat_data_del_var_ticket_dummies_predage_del_fare.columns.difference(['Fare','Ind','Survived','PassengerId'])]
+
+y = concat_data_del_var_ticket_dummies_predage_del_fare['Fare']
+
+
+#Grid search to select best parameter
+
+param_grid = [ {'n_neighbors': [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]} ] 
+
+knn = KNeighborsRegressor(weights='distance') 
+
+#train across 5 folds 
+
+grid_search = GridSearchCV(knn, param_grid, cv=5, scoring='neg_mean_squared_error', return_train_score=True) 
+
+grid_search.fit(x, y)
+
+grid_search.best_params_
+
+
+#knn modeling for prediction
+
+knn_fare = KNeighborsRegressor(n_neighbors = 10, weights = "distance").fit(x, y)
+
+
+#predict Fare, fill NaN value, concatenate dataset
+
+concat_data_del_var_ticket_dummies_predage_fare = concat_data_del_var_ticket_dummies_predage[concat_data_del_var_ticket_dummies_predage['Fare'].isnull()]
+
+x_new = concat_data_del_var_ticket_dummies_predage_fare[concat_data_del_var_ticket_dummies_predage_fare.columns.difference(['Fare','Ind','Survived','PassengerId'])]
+
+knn_fare_pred = knn_fare.predict(x_new)
+
+knn_fare_pred
+
+concat_data_del_var_ticket_dummies_predage_fare['Fare'] = knn_fare_pred
+
+concat_data_del_var_ticket_dummies_predagefare = pd.concat([concat_data_del_var_ticket_dummies_predage_del_fare,concat_data_del_var_ticket_dummies_predage_fare])
+
+concat_data_del_var_ticket_dummies_predagefare.isnull().sum()
+
+
+#split full_train, full_test dataset using Ind
+
+train_full_dummies_two = concat_data_del_var_ticket_dummies_predagefare[concat_data_del_var_ticket_dummies_predagefare['Ind']==0]
+
+test_full_dummies_two = concat_data_del_var_ticket_dummies_predagefare[concat_data_del_var_ticket_dummies_predagefare['Ind']==1]
+
+
+#change type 'survived' float to int
+
+train_full_dummies_two = train_full_dummies_two.astype({'Survived':'int'})
+
+train_full_dummies_two['Survived']
+
+
+#delete target variable 'survived' in test set
+
+test_full_dummies_two = test_full_dummies_two[test_full_dummies_two.columns.difference(['Survived'])]
+
+test_full_dummies_two
+
+
+#categorize Age to decrese prediction error
+
+def categorization_age(x):
+    if x < 10.0:
+        return '0s'
+    elif x < 20.0:
+        return '10s'
+    elif x < 30.0:
+        return '20s'
+    elif x < 40.0:
+        return '30s'
+    elif x < 50.0:
+        return '40s'
+    elif x < 60.0:
+        return '50s'
+    else:
+        return 'old'
+    
+train_full_dummies_two['cat_age']=[categorization_age(x) for x in train_full_dummies_two['Age']]
+
+test_full_dummies_two['cat_age']=[categorization_age(x) for x in test_full_dummies_two['Age']]
+
+#create categorization age dummy variable
+train_full_dummies_two = pd.get_dummies(train_full_dummies_two,drop_first=True)
+test_full_dummies_two = pd.get_dummies(test_full_dummies_two,drop_first=True)
+
+
+#train&test set split
+
+from sklearn.model_selection import train_test_split
+
+x = train_full_dummies_two[train_full_dummies_two.columns.difference(['Survived','PassengerId','Ind','Age'])]
+
+y = train_full_dummies_two['Survived']
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=126)
+
+
+#logistic regression
+
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
+ 
+log_reg = LogisticRegression()
+
+log_reg.fit(x_train, y_train)
+ 
+y_pred = log_reg.predict(x_test)
+
+print(metrics.accuracy_score(y_test, y_pred))
+
+
+#decision tree
+
+from sklearn.tree import DecisionTreeClassifier
+
+dec_tree = DecisionTreeClassifier(random_state=156)
+
+dec_tree.fit(x_train, y_train)
+
+y_pred = dec_tree.predict(x_test)
+
+print(metrics.accuracy_score(y_test, y_pred))
+
+#svm
+
+from sklearn.svm import SVC
+
+svm_model = SVC(kernel='rbf', C=8, gamma=0.1)
+ 
+svm_model.fit(x_train, y_train)
+
+y_pred = svm_model.predict(x_test)
+
+print(metrics.accuracy_score(y_test, y_pred))
+
+#random forest
+
+from sklearn.ensemble import RandomForestClassifier
+ 
+forest = RandomForestClassifier(random_state=42,n_estimators=120,max_depth=5)
+forest.fit(x_train, y_train)
+ 
+y_pred = forest.predict(x_test)
+
+print(metrics.accuracy_score(y_test, y_pred))
+
+
+#gradient boodsting
+
+from sklearn.ensemble import GradientBoostingClassifier
+
+gbrt = GradientBoostingClassifier(random_state=42,learning_rate=0.1,max_depth=3,n_estimators=110)
+
+gbrt.fit(x_train,y_train)
+
+y_pred = gbrt.predict(x_test)
+
+print(metrics.accuracy_score(y_test, y_pred))
+
+
+#xgboosting model 
+
+from xgboost import XGBClassifier
+
+xgb = XGBClassifier(random_state=42,n_estimators=110,learning_rate=0.2,max_depth=3)
+
+xgb.fit(x_train,y_train)
+
+y_pred = xgb.predict(x_test)
+
+print(metrics.accuracy_score(y_test, y_pred))
+
+
+#knn classification
+
+from sklearn.neighbors import KNeighborsClassifier
+
+knn = KNeighborsClassifier(n_neighbors=12).fit(x_train, y_train)
+
+y_pred = knn.predict(x_test)
+
+print(metrics.accuracy_score(y_test, y_pred))
+
+
+#deep learning modeling
+
+from tensorflow import keras
+from keras.optimizers import Adam
+
+network = keras.models.Sequential()
+
+number_of_features = len(x.columns)
+
+network.add(keras.layers.Dense(units=16, activation="relu", input_shape=(number_of_features,)))
+network.add(keras.layers.Dense(units=1, activation='sigmoid'))
+
+network.compile(loss='binary_crossentropy',
+                optimizer='Adam',
+                metrics=['accuracy'])
+
+history = network.fit(x_train,
+                      y_train,
+                      epochs=20,
+                      batch_size=512,
+                      validation_data=(x_test, y_test))
+                      
+                      
+#the best model is 'XGboost',see feature importance
+
+from xgboost import plot_importance
+
+fig,ax=plt.subplots()
+plot_importance(xgb,ax=ax)
+
+#select important variable to use the light model
+
+x_imp = train_full_dummies_two[['Family_number','Fare','Sex_male','Title_Master',
+                                'cat_age_30s','cat_age_20s','cat_age_50s','Pclass_3',
+                                'Title_Mr','cat_age_10s']]
+
+y = train_full_dummies_two['Survived']
+
+x_imp_train, x_imp_test, y_imp_train, y_imp_test = train_test_split(x_imp, y, test_size=0.2, random_state=126)
+
+
+#first tunning, to select the best parameter, optimization using grid search
+
+from sklearn.model_selection import GridSearchCV 
+
+param_grid = [ {'n_estimators': [80 ,90, 100, 110, 120],
+                'learning_rate': [0.01,0.05,0.1,0.15,0.2],
+               'max_depth':[3,4,5,6,7,8,9,10]} ] 
+
+xgb = XGBClassifier(random_state=42) 
+
+#train across 5 folds 
+
+grid_search = GridSearchCV(xgb, param_grid, cv=5, scoring='accuracy', return_train_score=True) 
+
+grid_search.fit(x_train, y_train)
+
+grid_search.best_params_
+
+#second tunning, to select the best parameter, optimization using grid search
+
+from sklearn.model_selection import GridSearchCV 
+
+param_grid = [ {
+               'min_split_loss':[0,1,2,3,4],
+               'reg_alpha':[0,1,2,3,4],
+               'reg_lambda':[0,1,2,3,4]} ] 
+
+xgb = XGBClassifier(random_state=42,n_estimators=90,learning_rate=0.15,max_depth=3) 
+
+#train across 5 folds 
+
+grid_search = GridSearchCV(xgb, param_grid, cv=5, scoring='accuracy', return_train_score=True) 
+
+grid_search.fit(x_train, y_train)
+
+grid_search.best_params_
+
+#xgboosting model using best parameter
+
+from xgboost import XGBClassifier
+
+xgb = XGBClassifier(random_state=42,n_estimators=90,learning_rate=0.15,
+                    max_depth=3,min_split_loss=0,reg_alpha=0,reg_lambda=1)
+
+xgb.fit(x_train,y_train)
+
+y_pred = xgb.predict(x_test)
+
+print(metrics.accuracy_score(y_test, y_pred))
+
+#best accuracy in light model
+
+xgb_light = XGBClassifier(random_state=42,n_estimators=90,learning_rate=0.15,
+                    max_depth=3,min_split_loss=0,reg_alpha=0,reg_lambda=1)
+
+xgb_light.fit(x_imp_train,y_imp_train)
+
+y_imp_pred = xgb_light.predict(x_imp_test)
+
+print(metrics.accuracy_score(y_imp_test, y_imp_pred))
+
+
+#predict test set using xgboost
+
+x_testset = test_full_dummies_two[['Family_number','Fare','Sex_male','Title_Master',
+                                'cat_age_30s','cat_age_20s','cat_age_50s','Pclass_3',
+                                'Title_Mr','cat_age_10s']]
+
+y_pred_test = xgb_light.predict(x_testset)
+
+y_pred_test
+
+# save submission file
+pd.DataFrame({'PassengerId': test_full_dummies_two['PassengerId'], 'Survived': y_pred_test}).set_index('PassengerId').to_csv('submission.csv')

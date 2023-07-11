@@ -1,0 +1,861 @@
+#필요한 라이브러리를 불러옵니다
+
+from selenium import webdriver #동적크롤링
+from bs4 import BeautifulSoup #기본 크롤링
+import time #웹페이지 로딩하는데 시간걸리므로 컴퓨터가 그 속도를 맞춰주기 위해 #시간지연을 위해
+import pandas as pd #파일로 저장하기위해
+
+#크롬드라이버를 기본 경로에 넣어둔 뒤
+#제어용 웹을 불러옵니다
+
+#크롬드라이버는 설정-크롬정보에서 크롬 버전과 맞아야합니다
+path='chromedriver.exe'
+driver=webdriver.Chrome(path)
+
+driver.get('https://www.data.go.kr/tcs/dss/selectDataSetList.do')
+
+
+#반복을 위한 카테고리의 코드를 추출합니다
+
+code=[]
+html=driver.page_source
+soup=BeautifulSoup(html,'html.parser')
+
+#id태그에 해당하는 속성값만 가져올수 있습니다
+text=soup.find_all(class_='jstree-anchor')
+for i in range(len(list(text))):
+    soup=BeautifulSoup(str(text[i]),'html.parser')
+    code.append(soup.select('a')[0]['id'])
+print(code)
+
+#필요없는 코드는 적절하게 삭제해줍니다
+
+#첫번째 원소 삭제
+del code[0]
+#마지막 원소 삭제
+del code[-1]
+#0번 인덱스부터 10번 인덱스 원소까지 삭제
+del code[0:11]
+#2번 인덱스부터 모든 원소 삭제
+del code[2:]
+
+
+#공공데이터 1페이지의 파일명과 파일형식을 추출하는 기본함수를 정의합니다
+
+#파일 제목 추출
+def data_crawl_title(new_title,title_list):
+    title=[]
+    
+    for i in title_list:
+        title.append(i.get_text())
+
+    for j in title:
+        new_title.append(j.strip())
+        
+    title=[]
+    
+    return new_title
+
+#파일 형식 추출
+def data_crawl_tag(new_tag,tag_list):
+    tag=[]
+    
+    for i in tag_list:
+        tag.append(i.get_text())
+
+    for j in tag:
+        new_tag.append(j.strip())
+        
+    tag=[]
+    
+    return new_tag
+
+#해당 카테고리의 페이지 수를 구합니다
+#페이지 수에 따라 이동하는 버튼의 xpath가 약간 다르기때문입니다
+
+def pagenumber(datanumber):
+    if datanumber <= 10:
+        return 1
+    elif datanumber <= 20:
+        return 2
+    elif datanumber <= 30:
+        return 3
+    elif datanumber <= 40:
+        return 4
+    elif datanumber <= 50:
+        return 5
+    elif datanumber <= 60:
+        return 6
+    elif datanumber <= 70:
+        return 7
+    elif datanumber <= 80:
+        return 8
+    elif datanumber <= 90:
+        return 9
+    elif datanumber <= 100:
+        return 10
+    elif datanumber > 100: #11페이지 이상은 xpath값이 같기때문에 하나로 통일해도 상관없습니다
+        return 11
+
+
+#1페이지의 파일 형식과 파일 제목을 추출하는 기본 반복함수를 정의합니다
+ 
+def fundamental_filedata(new_title,new_tag):
+    
+    html=driver.page_source
+    soup=BeautifulSoup(html,'html.parser')
+
+    title_list = soup.find_all('span','title')
+    tag_list = soup.find_all('span','tagset')
+
+    new_title = data_crawl_title(new_title,title_list)
+    new_tag = data_crawl_tag(new_tag,tag_list)
+    
+    return new_title,new_tag
+
+
+#해당 카테고리의 모든 파일 제목과 파일 형식을 추출하는 함수를 정의합니다
+
+def filedata_crawl(datanumber,pagenumber):
+                
+    new_title=[] #완성된 데이터명
+    new_tag=[] #완성된 파일형식
+    
+    if pagenumber == 1:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+    if pagenumber == 2:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+    
+    if pagenumber == 3:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[1]')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+        button3.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+    
+    if pagenumber == 4:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[1]')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+        button3.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button4 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[3]')
+        button4.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+    
+    if pagenumber == 5:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[1]')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+        button3.send_keys('\n')
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button4 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[3]')
+        button4.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button5 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[4]')
+        button5.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+    
+    if pagenumber == 6:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[1]')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+        button3.send_keys('\n')
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button4 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[3]')
+        button4.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button5 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[4]')
+        button5.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button6 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[5]')
+        button6.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        
+    if pagenumber == 7:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[1]')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+        button3.send_keys('\n')
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button4 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[3]')
+        button4.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button5 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[4]')
+        button5.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button6 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[5]')
+        button6.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button7 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[6]')
+        button7.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        
+        
+    if pagenumber == 8:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[1]')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+        button3.send_keys('\n')
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button4 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[3]')
+        button4.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button5 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[4]')
+        button5.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button6 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[5]')
+        button6.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button7 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[6]')
+        button7.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button8 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[7]')
+        button8.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        
+        
+    
+    if pagenumber == 9:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[1]')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+        button3.send_keys('\n')
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button4 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[3]')
+        button4.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button5 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[4]')
+        button5.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button6 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[5]')
+        button6.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button7 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[6]')
+        button7.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button8 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[7]')
+        button8.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button9 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[8]')
+        button9.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+    
+    if pagenumber == 10:
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[1]')
+        button2.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+        button3.send_keys('\n')
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button4 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[3]')
+        button4.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button5 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[4]')
+        button5.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button6 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[5]')
+        button6.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button7 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[6]')
+        button7.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button8 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[7]')
+        button8.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button9 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[8]')
+        button9.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+        
+        button10 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[9]')
+        button10.send_keys('\n')
+        
+        time.sleep(1)
+        
+        new_title,new_tag = fundamental_filedata(new_title,new_tag)
+    
+    if pagenumber > 10:
+
+        while True:
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button2 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[2]')
+            button2.send_keys('\n')
+            
+            time.sleep(1)
+            
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button3 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[3]')
+            button3.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button4 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[4]')
+            button4.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button5 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[5]')
+            button5.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button6 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[6]')
+            button6.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button7 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[7]')
+            button7.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button8 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[8]')
+            button8.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button9 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[9]')
+            button9.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            button10 = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[10]')
+            button10.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+
+            html=driver.page_source
+            soup=BeautifulSoup(html,'html.parser')
+
+            title_list = soup.find_all('span','title')
+            tag_list = soup.find_all('span','tagset')
+
+            new_title = data_crawl_title(new_title,title_list)
+            new_tag = data_crawl_tag(new_tag,tag_list)
+
+            next_button = driver.find_element_by_xpath('/html/body/div[2]/div/div/div/div[10]/nav/a[11]')
+            next_button.send_keys('\n')
+
+            time.sleep(1)
+
+            if len(new_title) == datanumber:
+                break
+        
+    return new_title, new_tag
+    
+    
+    
+#공공기관 카테고리의 모든 데이터명과 형식을 추출하는 자동 프로그램
+#컴퓨터 사양에 따라 잠시 렉이 걸려 페이지를 넘어가지 않는 오류나 버튼을 찾지 못하는 오류가 발생할 수 있습니다
+
+datanum = 0 #데이터 총 수를 알아내기 위해 #오류가 나서 다시 수행하는 경우 수정해야합니다
+
+for i in code:
+
+    #제공기관별 검색 버튼을 클릭
+    search_button = driver.find_element_by_xpath('//*[@id="orgBtn"]')
+    search_button.click()
+    
+    time.sleep(1.8)
+    
+    #공공기관 카테고리를 클릭
+    driver.find_element_by_xpath('//*[@id="8"]/i').click()
+    time.sleep(1)
+    driver.find_element_by_xpath('//*[@id="B000000"]/i').click()  #정부산하기관위원회 버튼 클릭
+    
+    time.sleep(1)
+    
+    #각 기관별 xpath는 id코드에 따라 반복됩니다
+    #문자열 포맷팅을 이용하여 각 기관별 xpath를 구합니다
+    xpath='//*[@id="%s"]' % i
+    agency_button = driver.find_element_by_xpath(xpath)
+    agency_name=driver.find_element_by_xpath(xpath).text #파일 제목을 자동저장하기 위해 기관 이름을 추출합니다
+    agency_button.click()
+    
+    time.sleep(1)
+    
+    #파일데이터 버튼을 클릭하여 파일데이터 페이지로 이동합니다
+    filedata_button = driver.find_element_by_xpath('//*[@id="dTypeFILE"]/a')
+    filedata_button.click()
+    
+    time.sleep(1)
+    
+    #해당 기관의 데이터수를 알아냅니다
+    datanumber=int(driver.find_element_by_xpath('//*[@id="fileCnt"]').text)
+    pagenum=pagenumber(datanumber)#변수이름과 함수이름은 같으면 오류날수 있습니다.
+    new_title,new_tag = filedata_crawl(datanumber,pagenum) #해당 기관의 데이터명과 형식을 추출합니다
+    
+    datanum = datanum + len(new_title) #데이터 총수를 알아내기위해 더해나갑니다
+    
+    #데이터프레임을 만들어냅니다
+    data={'데이터명':new_title,'파일형식':new_tag}
+    df=pd.DataFrame(data)
+    
+    #csv로 저장합니다
+    filename = 'C:/Users/USER/Desktop/dataname/%s.csv' % agency_name
+    df.to_csv(filename,encoding='cp949')
+    
+    new_title=[]
+    new_tag=[]
+
+
+#인코딩오류가 날수있습니다
+#오류가 나는 인코딩번호를 삭제하고 csv로 저장합니다
+df = df.applymap(lambda x: x.replace('\xa0',''))
+df.to_csv(filename,encoding='cp949')
+
+#반복시 오류가 나는 경우는 코드 i의 인덱스를 알아내 제거하거나 남겨둔뒤 code를 적절하게 수정하여 반복을 다시 수행합니다
+print(i)
+code.index(i)
+print(code)
+
+
+#접근해야할 카테고리가 여러 개인경우
+
+#국가행정기관 카테고리의 모든 데이터명과 형식을 추출하는 자동 프로그램
+datanum = 0
+
+for i in code:
+    search_button = driver.find_element_by_xpath('//*[@id="orgBtn"]')
+    search_button.click()
+    
+    time.sleep(1.8)
+    
+    #카테고리가 여러개인경우 모든 카테고리를 열어놓은 뒤 코드번호를 추출하고
+    #각 코드번호로 접근하면 자동화할수 있습니다
+    #반복하다가 오류가 나는 경우 효율성을 위해 더이상 사용하지 않는 카테고리는 주석처리하여 수행하지 않도록 합니다
+    
+    driver.find_element_by_xpath('//*[@id="1"]/i').click()
+    time.sleep(1)
+    #driver.find_element_by_xpath('//*[@id="1320000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1492000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1130000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1721000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1220000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1342000"]/i').click()
+    
+    #time.sleep(0.3)
+    
+    #driver.find_element_by_xpath('//*[@id="1180000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1140100"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1290000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1210000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1613000"]/i').click()
+    
+    #time.sleep(0.4)
+    #driver.find_element_by_xpath('//*[@id="1160100"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1360000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1051000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1543000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1390000"]/i').click()
+    
+    #time.sleep(1)
+    
+    #driver.find_element_by_xpath('//*[@id="1280000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1550000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1371000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1570100"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1690000"]/i').click()
+    
+    #time.sleep(1)
+    
+    #driver.find_element_by_xpath('//*[@id="1270000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1170000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1300000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1352000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1400000"]/i').click()
+    #time.sleep(0.3)
+    
+    #driver.find_element_by_xpath('//*[@id="1450000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1730000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1661000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1471000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1383000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1262000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1079960"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1760000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1230000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1421000"]/i').click()
+    
+    #time.sleep(1)
+   
+    #driver.find_element_by_xpath('//*[@id="1790387"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1240000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1250000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1430000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1532000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1192000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1192359"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1741000"]/i').click()
+    #time.sleep(0.3)
+    #driver.find_element_by_xpath('//*[@id="1670000"]/i').click()
+    #time.sleep(0.3)
+    driver.find_element_by_xpath('//*[@id="1480000"]/i').click()
+    
+    time.sleep(1)
+    
+    xpath='//*[@id="%s"]' % i
+    agency_button = driver.find_element_by_xpath(xpath)
+    agency_name=driver.find_element_by_xpath(xpath).text
+    agency_button.click()
+    
+    time.sleep(1)
+    
+    filedata_button = driver.find_element_by_xpath('//*[@id="dTypeFILE"]/a')
+    filedata_button.click()
+    
+    time.sleep(1)
+    
+    datanumber=int(driver.find_element_by_xpath('//*[@id="fileCnt"]').text)
+    pagenum=pagenumber(datanumber)#변수이름과 함수이름은 같으면 오류날수 있습니다.
+    new_title,new_tag = filedata_crawl(datanumber,pagenum)
+    
+    datanum = datanum + len(new_title)
+    
+    data={'데이터명':new_title,'파일형식':new_tag}
+    df=pd.DataFrame(data)
+    
+    filename = 'C:/Users/USER/Desktop/dataname/%s.csv' % agency_name
+    df.to_csv(filename,encoding='cp949')
+    
+    new_title=[]
+    new_tag=[]
