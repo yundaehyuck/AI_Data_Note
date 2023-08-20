@@ -44,3 +44,8 @@ Learn about data science basic skills
 
 - How to speed up your model using NVIDIA Data Loading Library
 ***
+
+
+4.Reference
+
+https://github.com/udacity/deep-learning-v2-pytorch
