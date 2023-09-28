@@ -50,3 +50,4 @@ Learn about data science basic skills
 ------
 
 https://github.com/udacity/deep-learning-v2-pytorch
+https://tutorials.pytorch.kr/index.html
